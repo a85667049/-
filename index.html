@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>弹力球</title>
+    <style>
+        .ball {
+            width: 10px;
+            height: 10px;
+            /* background-color: #000; */
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        body {
+            width: 100vw;
+            overflow: hidden;
+            cursor: none;
+            height: 100vh;
+            margin:0px !important;
+        }
+
+        .container {
+            position: relative;
+            height: 100%;
+        }
+
+        #stick {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #000;
+            border-radius: 50%;
+            z-index: 99;
+        }
+
+        .timeout {}
+
+        .timeout::after {
+            content: "出界啦";
+            position: absolute;
+            color: red;
+            /* min-width: 100px; */
+            font-size: 12px;
+            top: calc(50%);
+            height: 40px;
+            transform: translate(0, -50%);
+            left: 110%;
+            font-size: 12px;
+            text-align: left;
+            font-weight: 400;
+
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        .timeout::before {
+            content: "";
+            position: absolute;
+            top: -1px;
+            /* 超出元素边界1px以模拟outline */
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 50%;
+            /* 使伪元素保持圆形 */
+            box-shadow: 0 0 0 0 rgb(240, 38, 55);
+            /* 初始状态没有模糊和大小 */
+            animation: breathing-outline-animation 2s infinite ease-in-out;
+        }
+
+        @keyframes breathing-outline-animation {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgb(240, 38, 55);
+                /* 没有模糊和大小 */
+            }
+
+            50% {
+                box-shadow: 0 0 0 20px rgba(63, 147, 255, 0);
+                /* 模糊半径增加，透明度降低 */
+            }
+        }
+        .success{
+            width: 100%;
+            height: 100%;
+            background-color: green;
+        }
+        .success__text{
+            position: absolute;
+            top:50%;
+            left:50%;
+            transform: translate(-50%,-50%);
+            color:#fff;
+            font-weight: bold;
+            font-size:50px;
+        }
+        .success__ball{
+            position: absolute;
+            top:80%;
+            left:50%;
+            transform: translate(-50%,-50%);
+            border-radius: 50%;
+            background-color: #fff;
+            z-index: 90;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="stick"></div>
+    </div>
+
+</body>
+<script>
+    let total = 10;
+    let ballMovingSpeed = 10;//食物移动速度
+    let movingMouseSpeed = 1;//光标球移动速度
+    function createBalls() {
+    for (let i = 0; i < total; i++) {
+        const child = document.createElement('div');
+        child.classList.add("ball");
+        child.style.left = Math.random() * window.innerWidth + 'px';
+        child.style.top = Math.random() * window.innerHeight + 'px';
+        child.dataset.speedX = Math.random() * ballMovingSpeed - 1; // 随机水平速度
+        child.dataset.speedY = Math.random() * ballMovingSpeed - 1; // 随机垂直速度
+
+        // 设置随机渐变背景
+        child.style.background = generateRandomGradient();
+
+        document.getElementsByClassName("container")[0].append(child);
+    }
+}
+
+function generateRandomGradient() {
+    // 随机选择线性或径向渐变
+    // const gradientType = Math.random() < 0.5 ? 'linear-gradient' : 'radial-gradient';
+    // 生成两个随机颜色
+    const color1 = `rgba(${randomRGB()}, ${randomRGB()}, ${randomRGB()}, ${1})`;
+    const color2 = `rgba(${randomRGB()}, ${randomRGB()}, ${randomRGB()}, ${Math.random()})`;
+
+    // 返回渐变字符串
+    return `${color1}`;
+}
+
+function randomRGB() {
+    return Math.floor(Math.random() * 256);
+}
+    createBalls();
+
+    function moveElement() {
+        let classList = document.getElementsByClassName("ball");
+        for (let i = 0; i < classList.length; i++) {
+            var elem = classList[i];
+            let posX = parseFloat(elem.style.left, 10);
+            let posY = parseFloat(elem.style.top, 10);
+            let speedX = parseFloat(elem.dataset.speedX);
+            let speedY = parseFloat(elem.dataset.speedY);
+
+            posX += speedX;
+            posY += speedY;
+
+            // 边界检查
+            if (posX < 10 || posX > window.innerWidth - elem.offsetWidth) {
+                speedX *= -1;
+                elem.dataset.speedX = speedX;
+            }
+            if (posY < 10 || posY > window.innerHeight - elem.offsetHeight) {
+                speedY *= -1;
+                elem.dataset.speedY = speedY;
+            }
+
+            elem.style.left = posX + 'px';
+            elem.style.top = posY + 'px';
+           
+        }
+    }
+
+    function updateDirection() {
+        let classList = document.getElementsByClassName("ball");
+        for (let i = 0; i < classList.length; i++) {
+            var elem = classList[i];
+            elem.dataset.speedX = Math.random() * ballMovingSpeed ;
+            elem.dataset.speedY = Math.random() * ballMovingSpeed ;
+        }
+    }
+
+    setInterval(moveElement, 10); // 更快的移动间隔使动画更平滑
+    setInterval(updateDirection, 3000); // 每2秒随机改变方向
+    document.addEventListener('mousemove', function (e) {
+        var mouseX = e.clientX;
+        var mouseY = e.clientY;
+        let stick = document.getElementById("stick");
+        const movingDisY = mouseY * movingMouseSpeed;
+        const movingDisX = mouseX * movingMouseSpeed;
+        let balls = document.getElementsByClassName("ball");
+        for (let i = 0; i < balls.length; i++) {
+            if (isColliding(stick, balls[i])) {
+                // 增加 stick 的大小
+                stick.style.width = stick.offsetWidth + balls[i].offsetWidth + 'px';
+                stick.style.height = stick.offsetHeight + balls[i].offsetHeight + 'px';
+
+                // 移除 ball
+                balls[i].parentNode.removeChild(balls[i]);
+            }
+        }
+        if(movingDisY >= (window.innerHeight-stick.offsetHeight)){
+        }else{
+            stick.style.top = movingDisY  + 'px';
+        }
+        if(movingDisX >= (window.innerWidth-stick.offsetWidth)){
+        }else{
+            stick.style.left = movingDisX  + 'px';
+        }
+        if(document.getElementsByClassName('ball').length ===0 &&  document.getElementsByClassName("success").length === 0){
+            const ele = document.createElement('div');
+            ele.classList.add("success");
+            const text = document.createElement('div');
+            text.classList.add("success__text");
+            text.innerHTML = "你赢啦！！！"
+            const button = document.createElement('div');
+            button.classList.add("success__ball");
+            button.style.width = stick.offsetWidth + 'px';
+            button.style.height = stick.offsetHeight + 'px';
+            document.getElementsByClassName("container")[0].append(ele);
+            document.getElementsByClassName("success")[0].append(text,button);
+        }
+        if(document.getElementsByClassName("success").length >0){
+            const ballLeft = document.getElementsByClassName("success__ball")[0].getBoundingClientRect().left - stick.getBoundingClientRect().left;
+            const ballTop= document.getElementsByClassName("success__ball")[0].getBoundingClientRect().top - stick.getBoundingClientRect().top;
+            if(    (ballLeft > -10 &&  ballLeft < 10) && (ballTop > -10 &&  ballTop < 10)){
+                document.getElementsByClassName("success")[0].remove();
+                total += 10;
+                stick.style.width = 20 + 'px';
+                stick.style.height = 20 + 'px';
+                createBalls();
+            }
+        }
+    });
+    document.addEventListener('mouseleave', function () {
+        // 隐藏自定义光标或执行其他操作
+        document.getElementById("stick").classList.add("timeout");
+    });
+    document.addEventListener('mouseenter', function () {
+        // 显示自定义光标
+        document.getElementById("stick").classList.remove("timeout");
+    });
+
+    function isColliding(elem1, elem2) {
+        const rect1 = elem1.getBoundingClientRect();
+        const rect2 = elem2.getBoundingClientRect();
+
+        return !(rect1.right < rect2.left ||
+            rect1.left > rect2.right ||
+            rect1.bottom < rect2.top ||
+            rect1.top > rect2.bottom);
+    }
+</script>
+
+</html>
